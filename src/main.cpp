@@ -58,12 +58,12 @@ int main(int argc, char *argv[])
 
     int t = parser.get<int>("t");
     int nc = parser.get<int>("nc");
-    std::string filepath = parser.get<std::string>("f");
+    string filepath = parser.get<string>("f");
 
     CV_Assert(0 <= t && t <= 2);
     TYPECHART chartType = TYPECHART(t);
 
-    std::cout << "t: " << t << " , nc: " << nc <<  ", \nf: " << filepath << std::endl;
+    cout << "t: " << t << " , nc: " << nc <<  ", \nf: " << filepath << endl;
 
     if (!parser.check())
     {
@@ -74,11 +74,11 @@ int main(int argc, char *argv[])
     Mat image = cv::imread(filepath, IMREAD_COLOR);
     if (!image.data)
     {
-        std::cout << "Invalid Image!" << std::endl;
+        cout << "Invalid Image!" << endl;
         return 1;
     }
 
-    cv::Mat imageCopy = image.clone();
+    Mat imageCopy = image.clone();
     Ptr<CCheckerDetector> detector = CCheckerDetector::create();
     // Marker type to detect
     if (!detector->process(image, chartType, nc))
@@ -87,8 +87,8 @@ int main(int argc, char *argv[])
         return 2;
     }
     // get checker
-    std::vector<Ptr<mcc::CChecker>> checkers = detector->getListColorChecker();
-    cout << "num of checkers" << checkers.size() << std::endl;
+    vector<Ptr<mcc::CChecker>> checkers = detector->getListColorChecker();
+    cout << "num of checkers" << checkers.size() << endl;
 
     
     for (Ptr<mcc::CChecker> checker : checkers)
@@ -96,24 +96,31 @@ int main(int argc, char *argv[])
         // current checker
         Ptr<CCheckerDraw> cdraw = CCheckerDraw::create(checker);
         cdraw->draw(image);
-        cv::Mat chartsRGB = checker->getChartsRGB();
+        Mat chartsRGB = checker->getChartsRGB();
 
-        cv::Mat src = chartsRGB.col(1).clone().reshape(3, 18);
+        Mat src = chartsRGB.col(1).clone().reshape(3, 18);
         src /= 255.0;
-        cv::Mat ref_ = cv::Mat(18, 9, CV_32FC1, CChartVinylColors);
+        Mat ref_ = Mat(18, 9, CV_32FC1, CChartVinylColors);
         ref_.convertTo(ref_, CV_64F);
         Mat ref = ref_.colRange(3, 6).clone().reshape(3, 18);
 
         Color color(ref, Lab_D50_2);
         Color color2 = color.to(sRGB);
         //cout << "color2:" << color2.colors << endl;
-        std::vector<double> saturated_threshold = { 0, 0.98 };
+        vector<double> saturated_threshold = { 0, 0.98 };
 
-        cv::Mat weight_list;
+        Mat weight_list;
         ColorCorrectionModel p1(src, color, sRGB, CCM_3x3, CIE2000, COLORPOLYFIT, 2.2, 3, saturated_threshold, weight_list, 0, LEAST_SQUARE, 5000, 1e-4);
         //ColorCorrectionModel p1(src / 255, color, sRGB, CCM_3x3, CIE2000, GAMMA, 2.2, 3, saturated_threshold, weight_list, 0, LEAST_SQUARE, 5000, 1e-4);
-        cv::Mat calibratedImage = p1.inferImage(filepath);
-        cv::imwrite("./calibrated_image.png", calibratedImage);
+        Mat calibratedImage = p1.inferImage(filepath);
+
+        string filename = filepath.substr(filepath.find_last_of('/')+1);
+        int dotIndex = filename.find_last_of('.');
+        string baseName = filename.substr(0, dotIndex);
+        string ext = filename.substr(dotIndex+1, filename.length()-dotIndex);
+
+        string calibratedFilePath = baseName + ".calibrated." + ext;
+        cv::imwrite(calibratedFilePath, calibratedImage);
         //cout << p1.loss << endl;
 
         //cout << "ref: " << ref << endl;
@@ -124,7 +131,6 @@ int main(int argc, char *argv[])
         //cout << "ref:" << ref << endl;
 
     }
-    //cv::imwrite("./original.png", image)
     cv::imwrite("./chart_color_detected.png", image);
     return 0;
 }
