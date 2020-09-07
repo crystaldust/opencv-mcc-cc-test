@@ -21,3 +21,31 @@ The original image(build/1.png):
 The calibrated image(build/1.calibrated.png):
 
 ![calibrated.1.png](./build/1.calibrated.png)
+
+The original image(build/2.png):
+
+![image2](./build/2.png)
+
+The calibrated image(build/2.calibrated.png):
+
+![calibrated.2.png](./build/2.calibrated.png)
+
+
+
+The original image(build/3.png):
+
+![image3](./build/3.png)
+
+The calibrated image(build/3.calibrated.png):
+
+![calibrated.3.png](./build/3.calibrated.png)
+
+
+
+The original image(build/4.png):
+
+![image4](./build/4.png)
+
+The calibrated image(build/4.calibrated.png):
+
+![calibrated.4.png](./build/4.calibrated.png)
