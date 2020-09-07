@@ -21,31 +21,6 @@ const char *keys = {
     "{f        | 1    | Path of the file to process (-v) }"
     "{nc       | 1    | Maximum number of charts in the image }"};
 
-
-float CChartVinylColors[18][9] = {
-    //       sRGB              CIE L*a*b*             Munsell Notation
-    // ---------------  ------------------------     Hue Value / Chroma
-    // R     G      B        L*      a*       b*
-    {255.0f, 255.0f, 255.0f, 100.0f, 0.0052f, -0.0104f, -1.0f, -1.0f, -1.0f},
-    {176.0f, 180.0f, 183.0f, 73.0834f, -0.820f, -2.021f, -1.0f, -1.0f, -1.0f},
-    {150.0f, 151.0f, 155.0f, 62.493f, 0.426f, -2.231f, -1.0f, -1.0f, -1.0f},
-    {119.0f, 120.0f, 124.0f, 50.464f, 0.447f, -2.324f, -1.0f, -1.0f, -1.0f},
-    {88.0f, 89.0f, 91.0f, 37.797f, 0.036f, -1.297f, -1.0f, -1.0f, -1.0f},
-    {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, -1.0f, -1.0f},
-    {237.0f, 27.0f, 36.0f, 51.588f, 73.518f, 51.569f, -1.0f, -1.0f, -1.0f},
-    {254.0f, 242.0f, 0.0f, 93.699f, -15.734f, 91.942f, -1.0f, -1.0f, -1.0f},
-    {106.0f, 189.0f, 71.0f, 69.408f, -46.594f, 50.487f, -1.0f, -1.0f, -1.0f},
-    {0.0f, 173.0f, 239.0f, 66.610f, -13.679f, -43.172f, -1.0f, -1.0f, -1.0f},
-    {0.0f, 26.0f, 83.0f, 11.711f, 16.980f, -37.176f, -1.0f, -1.0f, -1.0f},
-    {238.0f, 1.0f, 141.0f, 51.974f, 81.944f, -8.407f, -1.0f, -1.0f, -1.0f},
-    {174.0f, 50.0f, 58.0f, 40.549f, 50.440f, 24.849f, -1.0f, -1.0f, -1.0f},
-    {209.0f, 127.0f, 41.0f, 60.816f, 26.069f, 49.442f, -1.0f, -1.0f, -1.0f},
-    {7.0f, 136.0f, 165.0f, 52.253f, -19.950f, -23.996f, -1.0f, -1.0f, -1.0f},
-    {188.0f, 86.0f, 149.0f, 51.286f, 48.470f, -15.058f, -1.0f, -1.0f, -1.0f},
-    {200.0f, 159.0f, 139.0f, 68.707f, 12.296f, 16.213f, -1.0f, -1.0f, -1.0f},
-    {183.0f, 147.0f, 125.0f, 63.684f, 10.293f, 16.764f, -1.0f, -1.0f, -1.0f},
-};
-
 int main(int argc, char *argv[])
 {
 
@@ -93,44 +68,36 @@ int main(int argc, char *argv[])
     
     for (Ptr<mcc::CChecker> checker : checkers)
     {
-        // current checker
         Ptr<CCheckerDraw> cdraw = CCheckerDraw::create(checker);
         cdraw->draw(image);
         Mat chartsRGB = checker->getChartsRGB();
 
         Mat src = chartsRGB.col(1).clone().reshape(3, 18);
         src /= 255.0;
-        Mat ref_ = Mat(18, 9, CV_32FC1, CChartVinylColors);
-        ref_.convertTo(ref_, CV_64F);
-        Mat ref = ref_.colRange(3, 6).clone().reshape(3, 18);
 
-        Color color(ref, Lab_D50_2);
-        Color color2 = color.to(sRGB);
-        //cout << "color2:" << color2.colors << endl;
-        vector<double> saturated_threshold = { 0, 0.98 };
 
         Mat weight_list;
-        ColorCorrectionModel p1(src, color, sRGB, CCM_3x3, CIE2000, COLORPOLYFIT, 2.2, 3, saturated_threshold, weight_list, 0, LEAST_SQUARE, 5000, 1e-4);
-        //ColorCorrectionModel p1(src / 255, color, sRGB, CCM_3x3, CIE2000, GAMMA, 2.2, 3, saturated_threshold, weight_list, 0, LEAST_SQUARE, 5000, 1e-4);
-        Mat calibratedImage = p1.inferImage(filepath);
+        ColorCorrectionModel model1(src, Vinyl_D50_2);
+        
+        // More models with different parameters, try it & check the document for details.
+        // ColorCorrectionModel model2(src, Vinyl_D50_2, AdobeRGB, CCM_4x3, CIE2000, GAMMA, 2.2, 3);
+        // ColorCorrectionModel model3(src, Vinyl_D50_2, WideGamutRGB, CCM_4x3, CIE2000, GRAYPOLYFIT, 2.2, 3);
+        // ColorCorrectionModel model4(src, Vinyl_D50_2, ProPhotoRGB, CCM_4x3, RGBL, GRAYLOGPOLYFIT, 2.2, 3);
+        // ColorCorrectionModel model5(src, Vinyl_D50_2, DCI_P3_RGB, CCM_3x3, RGB, IDENTITY_, 2.2, 3);
+        // ColorCorrectionModel model6(src, Vinyl_D50_2, AppleRGB, CCM_3x3, CIE2000, COLORPOLYFIT, 2.2, 2,{ 0, 0.98 },Mat(),2);
+        // ColorCorrectionModel model7(src, Vinyl_D50_2, REC_2020_RGB, CCM_3x3,  CIE94_GRAPHIC_ARTS, COLORLOGPOLYFIT, 2.2, 3);
 
+
+        Mat calibratedImage = model1.inferImage(filepath);
+
+        // Save the calibrated image to {FILE_NAME}.calibrated.{FILE_EXT}
         string filename = filepath.substr(filepath.find_last_of('/')+1);
         int dotIndex = filename.find_last_of('.');
         string baseName = filename.substr(0, dotIndex);
         string ext = filename.substr(dotIndex+1, filename.length()-dotIndex);
-
         string calibratedFilePath = baseName + ".calibrated." + ext;
+
         cv::imwrite(calibratedFilePath, calibratedImage);
-        //cout << p1.loss << endl;
-
-        //cout << "ref: " << ref << endl;
-        cout << "src: " << src << endl;
-
-
-
-        //cout << "ref:" << ref << endl;
-
     }
-    cv::imwrite("./chart_color_detected.png", image);
     return 0;
 }
